@@ -1,0 +1,53 @@
+[
+  {"city": "Delhi", "date": "2025-07-13", "high": 42, "low": 29, "condition": "Sunny", "wind": 8},
+  {"city": "Delhi", "date": "2025-07-14", "high": 39, "low": 28, "condition": "Rain", "wind": 12},
+  {"city": "Delhi", "date": "2025-07-15", "high": 37, "low": 26, "condition": "Thunderstorm", "wind": 15},
+
+  {"city": "Mumbai", "date": "2025-07-13", "high": 33, "low": 27, "condition": "Rain", "wind": 10},
+  {"city": "Mumbai", "date": "2025-07-14", "high": 32, "low": 26, "condition": "Cloudy", "wind": 9},
+  {"city": "Mumbai", "date": "2025-07-15", "high": 34, "low": 28, "condition": "Sunny", "wind": 8},
+
+  {"city": "Bangalore", "date": "2025-07-13", "high": 29, "low": 21, "condition": "Cloudy", "wind": 11},
+  {"city": "Bangalore", "date": "2025-07-14", "high": 30, "low": 22, "condition": "Rain", "wind": 13},
+  {"city": "Bangalore", "date": "2025-07-15", "high": 31, "low": 23, "condition": "Thunderstorm", "wind": 14},
+
+  {"city": "Chennai", "date": "2025-07-13", "high": 36, "low": 28, "condition": "Sunny", "wind": 10},
+  {"city": "Chennai", "date": "2025-07-14", "high": 35, "low": 27, "condition": "Cloudy", "wind": 9},
+  {"city": "Chennai", "date": "2025-07-15", "high": 37, "low": 28, "condition": "Rain", "wind": 10},
+
+  {"city": "Kolkata", "date": "2025-07-13", "high": 34, "low": 27, "condition": "Rain", "wind": 10},
+  {"city": "Kolkata", "date": "2025-07-14", "high": 35, "low": 26, "condition": "Cloudy", "wind": 8},
+  {"city": "Kolkata", "date": "2025-07-15", "high": 36, "low": 27, "condition": "Sunny", "wind": 9},
+
+  {"city": "Hyderabad", "date": "2025-07-13", "high": 35, "low": 25, "condition": "Sunny", "wind": 10},
+  {"city": "Hyderabad", "date": "2025-07-14", "high": 34, "low": 26, "condition": "Rain", "wind": 12},
+  {"city": "Hyderabad", "date": "2025-07-15", "high": 33, "low": 25, "condition": "Cloudy", "wind": 11},
+
+  {"city": "Pune", "date": "2025-07-13", "high": 30, "low": 22, "condition": "Cloudy", "wind": 9},
+  {"city": "Pune", "date": "2025-07-14", "high": 31, "low": 23, "condition": "Rain", "wind": 11},
+  {"city": "Pune", "date": "2025-07-15", "high": 32, "low": 24, "condition": "Thunderstorm", "wind": 13},
+
+  {"city": "Ahmedabad", "date": "2025-07-13", "high": 38, "low": 27, "condition": "Sunny", "wind": 7},
+  {"city": "Ahmedabad", "date": "2025-07-14", "high": 39, "low": 28, "condition": "Cloudy", "wind": 8},
+  {"city": "Ahmedabad", "date": "2025-07-15", "high": 40, "low": 29, "condition": "Rain", "wind": 10},
+
+  {"city": "Jaipur", "date": "2025-07-13", "high": 41, "low": 30, "condition": "Sunny", "wind": 6},
+  {"city": "Jaipur", "date": "2025-07-14", "high": 40, "low": 29, "condition": "Cloudy", "wind": 9},
+  {"city": "Jaipur", "date": "2025-07-15", "high": 39, "low": 28, "condition": "Thunderstorm", "wind": 12},
+
+  {"city": "Lucknow", "date": "2025-07-13", "high": 37, "low": 27, "condition": "Rain", "wind": 11},
+  {"city": "Lucknow", "date": "2025-07-14", "high": 36, "low": 26, "condition": "Cloudy", "wind": 10},
+  {"city": "Lucknow", "date": "2025-07-15", "high": 38, "low": 27, "condition": "Sunny", "wind": 9},
+
+  {"city": "Surat", "date": "2025-07-13", "high": 33, "low": 26, "condition": "Rain", "wind": 10},
+  {"city": "Surat", "date": "2025-07-14", "high": 34, "low": 27, "condition": "Cloudy", "wind": 9},
+  {"city": "Surat", "date": "2025-07-15", "high": 35, "low": 28, "condition": "Sunny", "wind": 8},
+
+  {"city": "Nagpur", "date": "2025-07-13", "high": 36, "low": 27, "condition": "Sunny", "wind": 10},
+  {"city": "Nagpur", "date": "2025-07-14", "high": 37, "low": 28, "condition": "Rain", "wind": 11},
+  {"city": "Nagpur", "date": "2025-07-15", "high": 38, "low": 29, "condition": "Thunderstorm", "wind": 13},
+
+  {"city": "Indore", "date": "2025-07-13", "high": 34, "low": 26, "condition": "Cloudy", "wind": 10},
+  {"city": "Indore", "date": "2025-07-14", "high": 35, "low": 27, "condition": "Rain", "wind": 9},
+  {"city": "Indore", "date": "2025-07-15", "high": 36, "low": 28, "condition": "Sunny", "wind": 8}
+]

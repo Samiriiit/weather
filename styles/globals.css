@@ -1,0 +1,179 @@
+/* CSS of the UI */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to bottom, #d0eefa, #ffffff);
+  margin: 0;
+  padding: 20px;
+}
+
+.app {
+  height: 400px;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  text-align: center;
+  color: #0277bd;
+  font-size: 2.3rem;
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+select,
+button {
+  margin: 0px 5px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.forecast-card-enhanced {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  margin-top: 10px;
+}
+
+.forecast-day-enhanced {
+  flex: 1;
+  background-color: #e3f2fd;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease-in-out;
+}
+
+.forecast-day-enhanced:hover {
+  transform: translateY(-5px);
+}
+
+.forecast-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.forecast-date-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.forecast-icon-big {
+  font-size: 2.2rem;
+  margin-top: 5px;
+}
+
+.temp-high {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.temp-low {
+  color: #1976d2;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.forecast-condition,
+.forecast-wind {
+  display: block;
+  margin: 6px 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.forecast-predictions {
+  margin-top: 10px;
+  padding-left: 18px;
+  text-align: left;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.forecast-date {
+  font-size: 0.95rem;
+  color: #555;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: 15px;
+    height: auto;
+    max-width: 100%;
+  }
+
+  .title {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  .forecast-card-enhanced {
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .forecast-day-enhanced {
+    width: 90%;
+    padding: 12px;
+    margin: 0 auto;
+  }
+
+  .forecast-date-icon {
+    align-items: center;
+  }
+
+  .forecast-icon-big {
+    font-size: 1.8rem;
+  }
+
+  select,
+  button {
+    width: 100%;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .app {
+    padding: 20px;
+  }
+
+  .forecast-card-enhanced {
+    flex-direction: column;
+  }
+
+  select,
+  button {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forecast-card-enhanced {
+    gap: 10px;
+  }
+
+  .forecast-day-enhanced {
+    padding: 10px;
+    width: 85%;
+  }
+
+  .forecast-icon-big {
+    font-size: 1.8rem;
+  }
+
+  .forecast-date-icon {
+    align-items: center;
+  }
+}
