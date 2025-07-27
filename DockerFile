@@ -10,5 +10,8 @@ COPY . .
 
 RUN npm run build && npm run export
 
+# Install static file server
+RUN npm install -g serve
+
 EXPOSE 3000
-CMD ["npx", "serve", "out"]
+CMD ["serve", "-s", "out", "-l", "3000"]
