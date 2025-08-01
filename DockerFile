@@ -1,17 +1,19 @@
 # Dockerfile
 FROM node:18-alpine
 
+# Set working directory inside the container
 WORKDIR /app
 
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
+# Copy rest of the source code
 COPY . .
 
-RUN npm run build && npm run export
+# Build the Next.js app
+RUN npm run build
 
-# Install static file server
-RUN npm install -g serve
-
+# Start the app
 EXPOSE 3000
-CMD ["serve", "-s", "out", "-l", "3000"]
+CMD ["npm", "start"]
