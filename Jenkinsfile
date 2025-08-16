@@ -10,26 +10,25 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm run test'
+                bat 'npm run test'
             }
         }
 
         stage('Deploy') {
             steps {
-                // Example: run production server
-                sh 'npm run start &'
+                bat 'npm run start'
             }
         }
     }
