@@ -1,19 +1,35 @@
 pipeline {
     agent any
+
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
         stage('Build') {
             steps {
-                echo 'Building...'
+                sh 'npm run build'
             }
         }
+
         stage('Test') {
             steps {
-                echo 'Running Tests...'
+                sh 'npm run test'
             }
         }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying Application...'
+                // Example: run production server
+                sh 'npm run start &'
             }
         }
     }
