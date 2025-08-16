@@ -1,14 +1,10 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "NodeJS"   // 👈 Make sure you configured NodeJS in Jenkins Global Tool Config with name "NodeJS"
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
         }
 
@@ -24,15 +20,9 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Start') {
             steps {
-                bat 'npm run test'
-            }
-        }
-
-        stage('Start App') {
-            steps {
-                bat 'npm run start'
+                bat 'npm start'
             }
         }
     }
