@@ -56,13 +56,16 @@ pipeline {
             }
         }
 
-        stage('Run Container') {
-            steps {
-                bat "podman stop %IMAGE_NAME%-container || true"
-                bat "podman rm %IMAGE_NAME%-container || true"
-                bat "podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%"
-            }
-        }
+      stage('Run Container') {
+    steps {
+        // Stop & remove container if exists, ignore errors
+        bat "podman stop %IMAGE_NAME%-container 2>nul"
+        bat "podman rm %IMAGE_NAME%-container 2>nul"
+
+        // Run new container
+        bat "podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%"
+    }
+}
 
         stage('Test') {
             steps {
