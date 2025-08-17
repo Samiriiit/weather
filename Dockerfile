@@ -34,15 +34,13 @@
 FROM node:18-slim AS builder
 WORKDIR /app
 
-# Copy package.json first
 COPY package*.json ./
 RUN npm install
 
-# Copy rest of app
 COPY . .
 
-# Build Next.js app
-RUN npm run build
+# Build Next.js app using npx (avoids permission issues)
+RUN npx next build
 
 # Production stage
 FROM node:18-slim
@@ -56,4 +54,5 @@ COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 CMD ["npx", "next", "start", "-p", "3000"]
+
 
