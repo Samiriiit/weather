@@ -58,9 +58,9 @@ pipeline {
 
       stage('Run Podman Container ') {
     steps {
-        // Stop & remove container if exists, ignore errors
-        bat "podman stop %IMAGE_NAME%-container 2>nul"
-        bat "podman rm %IMAGE_NAME%-container 2>nul"
+         // Stop & remove container if exists, ignore errors
+        bat "podman ps -a -q --filter name=%IMAGE_NAME%-container > nul && podman stop %IMAGE_NAME%-container"
+        bat "podman ps -a -q --filter name=%IMAGE_NAME%-container > nul && podman rm %IMAGE_NAME%-container"
 
         // Run new container
         bat "podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%"
