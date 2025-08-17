@@ -31,6 +31,7 @@
 # CMD ["npx", "next", "start", "-p", "3000"]
 
 # Build stage
+# Build stage
 FROM node:18-slim AS builder
 WORKDIR /app
 
@@ -39,8 +40,11 @@ RUN npm install
 
 COPY . .
 
-# Build Next.js app using npx (avoids permission issues)
-RUN npx next build
+# Ensure next binary is executable
+RUN chmod +x ./node_modules/.bin/next
+
+# Build using local next binary
+RUN ./node_modules/.bin/next build
 
 # Production stage
 FROM node:18-slim
@@ -54,5 +58,4 @@ COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 CMD ["npx", "next", "start", "-p", "3000"]
-
 
