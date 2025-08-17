@@ -56,7 +56,7 @@ pipeline {
             }
         }
 
-      stage('Run Container') {
+      stage('Run Podman Container ') {
     steps {
         // Stop & remove container if exists, ignore errors
         bat "podman stop %IMAGE_NAME%-container 2>nul"
