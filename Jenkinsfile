@@ -74,11 +74,17 @@ pipeline {
     }
 }
 
-        stage('Test') {
-            steps {
-                bat "curl http://localhost:3000 || exit 1"
-            }
-        }
+       stage('Test') {
+    steps {
+        bat """
+        REM Wait 5 seconds for container to start
+        timeout /t 5 /nobreak >nul
+
+        REM Check if FE container is responding
+        curl http://localhost:3000 || echo "Server not responding" && exit /b 1
+        """
+    }
+}
     }
 
     post {
