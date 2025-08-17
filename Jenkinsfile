@@ -1,5 +1,40 @@
+// pipeline {
+//     agent any
+
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
+
+//         stage('Install Dependencies') {
+//             steps {
+//                 bat 'npm install'
+//             }
+//         }
+
+//         stage('Build') {
+//             steps {
+//                 bat 'npm run build'
+//             }
+//         }
+
+//         stage('Start') {
+//             steps {
+//                 bat 'npm start'
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
+
+    environment {
+        IMAGE_NAME = "weather-fe"
+        IMAGE_TAG = "latest"
+    }
 
     stages {
         stage('Checkout') {
@@ -8,22 +43,40 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install & Build') {
             steps {
                 bat 'npm install'
-            }
-        }
-
-        stage('Build') {
-            steps {
                 bat 'npm run build'
             }
         }
 
-        stage('Start') {
+        stage('Build Podman Image') {
             steps {
-                bat 'npm start'
+                bat "podman build -t %IMAGE_NAME%:%IMAGE_TAG% ."
             }
+        }
+
+        stage('Run Container') {
+            steps {
+                bat "podman stop %IMAGE_NAME%-container || true"
+                bat "podman rm %IMAGE_NAME%-container || true"
+                bat "podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat "curl http://localhost:3000 || exit 1"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Next.js FE deployed successfully!"
+        }
+        failure {
+            echo "❌ Deployment failed!"
         }
     }
 }

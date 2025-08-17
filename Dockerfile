@@ -1,19 +1,28 @@
-# Dockerfile
-FROM node:18-alpine
-
-# Set working directory inside the container
+# Step 1: Build
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy rest of the source code
+# Copy source code
 COPY . .
 
-# Build the Next.js app
+# Build Next.js app
 RUN npm run build
 
-# Start the app
+# Step 2: Production image
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy build and dependencies
+COPY --from=builder /app/package*.json ./
+RUN npm install --production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Start Next.js app in production mode
+CMD ["npx", "next", "start", "-p", "3000"]
