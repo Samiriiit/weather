@@ -58,13 +58,20 @@ pipeline {
 
       stage('Run Podman Container ') {
    steps {
-                // Stop container if exists, ignore errors
-                bat "podman stop %IMAGE_NAME%-container 2>nul || echo Container not found, skipping"
-                bat "podman rm %IMAGE_NAME%-container 2>nul || echo Container not found, skipping"
+        bat """
+        REM Check if container exists
+        podman ps -a --format "{{.Names}}" | findstr /I "%IMAGE_NAME%-container" >nul
+        IF %ERRORLEVEL%==0 (
+            podman stop %IMAGE_NAME%-container
+            podman rm %IMAGE_NAME%-container
+        ) ELSE (
+            echo Container not found, skipping
+        )
 
-                // Run new container
-                bat "podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%"
-            }
+        REM Run new container
+        podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%
+        """
+    }
 }
 
         stage('Test') {
