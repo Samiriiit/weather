@@ -74,14 +74,25 @@ pipeline {
     }
 }
 
-       stage('Test') {
+//        stage('Test') {
+//     steps {
+//         bat """
+//         REM Wait 5 seconds for container to start
+//         timeout /t 5 /nobreak >nul
+
+//         REM Check if FE container is responding
+//         curl http://localhost:3000 || echo "Server not responding" && exit /b 1
+//         """
+//     }
+// }
+        stage('Test') {
     steps {
         bat """
-        REM Wait 5 seconds for container to start
-        timeout /t 5 /nobreak >nul
+        REM Wait 15 seconds for container to start
+        timeout /t 15 /nobreak >nul
 
-        REM Check if FE container is responding
-        curl http://localhost:3000 || echo "Server not responding" && exit /b 1
+        REM Check if FE container is responding using PowerShell
+        powershell -Command "try {Invoke-WebRequest http://localhost:3000 -UseBasicParsing} catch {exit 1}"
         """
     }
 }
