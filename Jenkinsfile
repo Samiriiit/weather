@@ -29,7 +29,7 @@ pipeline {
         // }
          stage('Build Podman Image') {
             steps {
-                bat 'podman build -t %IMAGE_NAME%:%IMAGE_TAG% frontend'
+                  bat "podman build -t %IMAGE_NAME%:%IMAGE_TAG% ."
             }
         }
 
