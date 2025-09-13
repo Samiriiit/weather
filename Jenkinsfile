@@ -50,12 +50,26 @@ pipeline {
 //         """
 //     }
 // }
- stage('Deploy Pod + Service') {
-            steps {
-                bat 'podman kube play weather-fe.yaml --replace'
-                bat 'podman kube play weather-fe-service.yaml --replace'
-            }
+    stage('Deploy Pod') {
+        steps {
+            bat 'podman kube play weather-fe.yaml --replace'
+            echo "⚠️ Skipping Service YAML on Windows Podman (NodePort not supported)"
         }
+    }
+    stage('Run FE Container') {
+    steps {
+        bat """
+        REM Stop old container if exists
+        podman ps -a --format "{{.Names}}" | findstr /I "%IMAGE_NAME%-container" >nul
+        IF %ERRORLEVEL%==0 (
+            podman stop %IMAGE_NAME%-container
+            podman rm %IMAGE_NAME%-container
+        )
+        REM Run new container with port mapping
+        podman run -d -p 32000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%
+        """
+    }
+}
 
         stage('Test') {
     steps {
