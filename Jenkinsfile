@@ -22,29 +22,40 @@ pipeline {
             }
         }
 
-        stage('Build Podman Image') {
+        // stage('Build Podman Image') {
+        //     steps {
+        //         bat "podman build -t %IMAGE_NAME%:%IMAGE_TAG% ."
+        //     }
+        // }
+         stage('Build Podman Image') {
             steps {
-                bat "podman build -t %IMAGE_NAME%:%IMAGE_TAG% ."
+                bat 'podman build -t %IMAGE_NAME%:%IMAGE_TAG% frontend'
             }
         }
 
-      stage('Run Podman Container ') {
-   steps {
-        bat """
-        REM Check if container exists
-        podman ps -a --format "{{.Names}}" | findstr /I "%IMAGE_NAME%-container" >nul
-        IF %ERRORLEVEL%==0 (
-            podman stop %IMAGE_NAME%-container
-            podman rm %IMAGE_NAME%-container
-        ) ELSE (
-            echo Container not found, skipping
-        )
+//       stage('Run Podman Container ') {
+//    steps {
+//         bat """
+//         REM Check if container exists
+//         podman ps -a --format "{{.Names}}" | findstr /I "%IMAGE_NAME%-container" >nul
+//         IF %ERRORLEVEL%==0 (
+//             podman stop %IMAGE_NAME%-container
+//             podman rm %IMAGE_NAME%-container
+//         ) ELSE (
+//             echo Container not found, skipping
+//         )
 
-        REM Run new container
-        podman run -d -p 6000:6000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%
-        """
-    }
-}
+//         REM Run new container
+//         podman run -d -p 3000:3000 --name %IMAGE_NAME%-container %IMAGE_NAME%:%IMAGE_TAG%
+//         """
+//     }
+// }
+ stage('Deploy Pod + Service') {
+            steps {
+                bat 'podman kube play weather-fe.yaml --replace'
+                bat 'podman kube play weather-fe-service.yaml --replace'
+            }
+        }
 
         stage('Test') {
     steps {
@@ -53,7 +64,7 @@ pipeline {
         timeout /t 15 /nobreak >nul
 
         REM Check if FE container is responding using PowerShell
-        powershell -Command "try {Invoke-WebRequest http://localhost:6000 -UseBasicParsing} catch {exit 1}"
+        powershell -Command "try {Invoke-WebRequest http://localhost:32000 -UseBasicParsing} catch {exit 1}"
         """
     }
 }

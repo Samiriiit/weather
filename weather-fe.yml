@@ -7,7 +7,7 @@ spec:
     - name: weather-fe
       image: weather-fe:latest
       ports:
-        - containerPort: 6000
+        - containerPort: 3000
       env:
         - name: NEXT_PUBLIC_API_BASE_URL
           value: "http://localhost:7000"   # BE ka URL

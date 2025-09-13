@@ -23,6 +23,6 @@ RUN npm install --production
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
-EXPOSE 6000
-CMD ["npx", "next", "start", "-p", "6000"]
+EXPOSE 3000
+CMD ["npx", "next", "start", "-p", "3000"]
 
