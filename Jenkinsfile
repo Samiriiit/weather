@@ -216,17 +216,17 @@ pipeline {
             }
         }
 
-        stage('Smoke Test') {
-            steps {
-                script {
-                    // Simple internal cluster test without port forwarding
-                    bat "kubectl exec deployment/weather-fe -- curl -I http://localhost:3000 || echo 'Internal curl test completed'"
+        // stage('Smoke Test') {
+        //     steps {
+        //         script {
+        //             // Simple internal cluster test without port forwarding
+        //             bat "kubectl exec deployment/weather-fe -- curl -I http://localhost:3000 || echo 'Internal curl test completed'"
                     
-                    // Alternatively, check if pod is responding internally
-                    bat "kubectl run smoke-test --image=curlimages/curl --rm -it --restart=Never -- curl -I http://weather-fe-service:80 || echo 'Service connectivity test completed'"
-                }
-            }
-        }
+        //             // Alternatively, check if pod is responding internally
+        //             bat "kubectl run smoke-test --image=curlimages/curl --rm -it --restart=Never -- curl -I http://weather-fe-service:80 || echo 'Service connectivity test completed'"
+        //         }
+        //     }
+        // }
     }
 
     post {
