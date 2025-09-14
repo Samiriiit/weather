@@ -123,7 +123,7 @@ pipeline {
                 bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
                 
                 // Load tar into Kind cluster
-                bat "kind load image-archive weather-fe.tar --name kind-weather-app"
+                bat "kind load image-archive weather-fe.tar --name weather-app"
             }
         }
 
