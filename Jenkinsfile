@@ -95,13 +95,69 @@
 // }
 
 
+// pipeline {
+//     agent any
+
+//     environment {
+//         FE_IMAGE_NAME = "weather-fe"
+//         IMAGE_TAG = "latest"
+//         KUBE_CONTEXT = "weather-app"
+//     }
+
+//     stages {
+//         stage('Checkout FE') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
+
+//         stage('Build FE Image') {
+//             steps {
+//                 bat "podman build -t %FE_IMAGE_NAME%:%IMAGE_TAG% ."
+//             }
+//         }
+
+//         stage('Load FE Image into Kind') {
+//             steps {
+//                 // Save image as tar
+//                 bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
+                
+//                 // Load tar into Kind cluster
+//                 bat "kind load image-archive weather-fe.tar --name weather-app"
+//             }
+//         }
+
+//         stage('Deploy FE to Kind') {
+//             steps {
+//                 bat "kubectl --context %KUBE_CONTEXT% apply -f weather-fe.yaml"
+//             }
+//         }
+
+//         stage('Verify FE Deployment') {
+//             steps {
+//                 bat "kubectl --context %KUBE_CONTEXT% get pods -l app=weather-fe"
+//                 bat "kubectl --context %KUBE_CONTEXT% get svc -l app=weather-fe"
+//             }
+//         }
+//     }
+
+//     post {
+//         success {
+//             echo "✅ FE deployed successfully to Kind cluster!"
+//         }
+//         failure {
+//             echo "❌ FE deployment failed!"
+//         }
+//     }
+// }
+
 pipeline {
     agent any
 
     environment {
         FE_IMAGE_NAME = "weather-fe"
         IMAGE_TAG = "latest"
-        KUBE_CONTEXT = "weather-app"
+        CLUSTER_NAME = "weather-app"
     }
 
     stages {
@@ -119,24 +175,21 @@ pipeline {
 
         stage('Load FE Image into Kind') {
             steps {
-                // Save image as tar
-                bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
-                
-                // Load tar into Kind cluster
-                bat "kind load image-archive weather-fe.tar --name weather-app"
+                // Simple direct loading - will work with Podman-based Kind
+                bat "kind load docker-image %FE_IMAGE_NAME%:%IMAGE_TAG% --name %CLUSTER_NAME%"
             }
         }
 
         stage('Deploy FE to Kind') {
             steps {
-                bat "kubectl --context %KUBE_CONTEXT% apply -f weather-fe.yaml"
+                bat "kubectl apply -f weather-fe.yaml"
             }
         }
 
         stage('Verify FE Deployment') {
             steps {
-                bat "kubectl --context %KUBE_CONTEXT% get pods -l app=weather-fe"
-                bat "kubectl --context %KUBE_CONTEXT% get svc -l app=weather-fe"
+                bat "kubectl get pods -l app=weather-fe"
+                bat "kubectl get svc -l app=weather-fe"
             }
         }
     }
