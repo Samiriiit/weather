@@ -114,7 +114,7 @@ pipeline {
 
         stage('Build FE Image') {
             steps {
-                bat "podman build -t %FE_IMAGE_NAME%:%IMAGE_TAG% ./frontend"
+                bat "podman build -t %FE_IMAGE_NAME%:%IMAGE_TAG% ."
             }
         }
 
