@@ -173,24 +173,25 @@ pipeline {
             }
         }
 
-       stage('Load FE Image into Kind') {
-        steps {
-            script {
-                // Save Podman image as tar archive
-                bat "podman save weather-fe:latest -o weather-fe.tar"
-                
-                // Load the tar archive into Kind cluster
-                bat "kind load image-archive weather-fe.tar --name weather-app"
-                
-                // Clean up the tar file
-                bat "if exist weather-fe.tar del weather-fe.tar"
+        stage('Prepare Image for Kind') {
+            steps {
+                // Save image but DON'T delete it yet
+                bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
             }
         }
-    }
+
+        stage('Load FE Image into Kind') {
+            steps {
+                bat "kind load image-archive weather-fe.tar --name %CLUSTER_NAME%"
+            }
+        }
 
         stage('Deploy FE to Kind') {
             steps {
                 bat "kubectl apply -f weather-fe.yaml"
+                
+                // Now we can clean up after deployment
+                bat "if exist weather-fe.tar del weather-fe.tar"
             }
         }
 
@@ -198,13 +199,18 @@ pipeline {
             steps {
                 bat "kubectl get pods -l app=weather-fe"
                 bat "kubectl get svc -l app=weather-fe"
+                bat "kubectl wait --for=condition=ready pod -l app=weather-fe --timeout=120s"
             }
         }
     }
 
     post {
+        always {
+            // Ensure cleanup even if pipeline fails
+            bat "if exist weather-fe.tar del weather-fe.tar"
+        }
         success {
-            echo "✅ FE deployed successfully to Kind cluster!"
+            echo "✅ FE deployed successfully!"
         }
         failure {
             echo "❌ FE deployment failed!"
