@@ -173,12 +173,20 @@ pipeline {
             }
         }
 
-        stage('Load FE Image into Kind') {
-            steps {
-                // Simple direct loading - will work with Podman-based Kind
-                bat "kind load docker-image %FE_IMAGE_NAME%:%IMAGE_TAG% --name %CLUSTER_NAME%"
+       stage('Load FE Image into Kind') {
+        steps {
+            script {
+                // Save Podman image as tar archive
+                bat "podman save weather-fe:latest -o weather-fe.tar"
+                
+                // Load the tar archive into Kind cluster
+                bat "kind load image-archive weather-fe.tar --name weather-app"
+                
+                // Clean up the tar file
+                bat "if exist weather-fe.tar del weather-fe.tar"
             }
         }
+    }
 
         stage('Deploy FE to Kind') {
             steps {
