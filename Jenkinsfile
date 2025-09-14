@@ -118,12 +118,21 @@ pipeline {
             }
         }
 
+        // stage('Push FE Image to Local Registry') {
+        //     steps {
+        //         bat "podman tag %FE_IMAGE_NAME%:%IMAGE_TAG% %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
+        //         bat "podman push %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
+        //     }
+        // }
         stage('Push FE Image to Local Registry') {
-            steps {
-                bat "podman tag %FE_IMAGE_NAME%:%IMAGE_TAG% %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-                bat "podman push %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-            }
-        }
+    steps {
+        // Tag FE image for local registry
+        bat "podman tag %FE_IMAGE_NAME%:%IMAGE_TAG% 0.0.0.0:5000/%FE_IMAGE_NAME%:%IMAGE_TAG%"
+        
+        // Push to local registry without TLS verification
+        bat "podman push --tls-verify=false 0.0.0.0:5000/%FE_IMAGE_NAME%:%IMAGE_TAG%"
+    }
+}
 
         stage('Deploy FE to Kind') {
             steps {
