@@ -102,7 +102,6 @@ pipeline {
         FE_IMAGE_NAME = "weather-fe"
         IMAGE_TAG = "latest"
         KUBE_CONTEXT = "kind-weather-app"
-        LOCAL_REGISTRY = "localhost:5000"
     }
 
     stages {
@@ -118,21 +117,15 @@ pipeline {
             }
         }
 
-        // stage('Push FE Image to Local Registry') {
-        //     steps {
-        //         bat "podman tag %FE_IMAGE_NAME%:%IMAGE_TAG% %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-        //         bat "podman push %LOCAL_REGISTRY%/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-        //     }
-        // }
-        stage('Push FE Image to Local Registry') {
-    steps {
-        // Tag FE image for local registry
-        bat "podman tag %FE_IMAGE_NAME%:%IMAGE_TAG% 0.0.0.0:5000/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-        
-        // Push to local registry without TLS verification
-        bat "podman push --tls-verify=false 0.0.0.0:5000/%FE_IMAGE_NAME%:%IMAGE_TAG%"
-    }
-}
+        stage('Load FE Image into Kind') {
+            steps {
+                // Save image as tar
+                bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
+                
+                // Load tar into Kind cluster
+                bat "kind load image-archive weather-fe.tar --name kind-weather-app"
+            }
+        }
 
         stage('Deploy FE to Kind') {
             steps {
@@ -150,10 +143,10 @@ pipeline {
 
     post {
         success {
-            echo "FE deployed successfully to Kind cluster!"
+            echo "✅ FE deployed successfully to Kind cluster!"
         }
         failure {
-            echo "FE deployment failed!"
+            echo "❌ FE deployment failed!"
         }
     }
 }
