@@ -12,32 +12,76 @@
 #         - name: NEXT_PUBLIC_API_BASE_URL
 #           value: "http://localhost:7000"   # BE ka URL
 
-apiVersion: v1
-kind: Pod
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: weather-fe
+#   labels:
+#     app: weather-fe
+# spec:
+#   containers:
+#     - name: weather-fe
+#       image: weather-fe:latest
+#       ports:
+#         - containerPort: 3000
+#       env:
+#         - name: NEXT_PUBLIC_API_BASE_URL
+#           value: "http://weather-be:8081"  # BE service URL
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: weather-fe-service
+# spec:
+#   type: NodePort
+#   selector:
+#     app: weather-fe
+#   ports:
+#     - port: 3000        # Container port
+#       targetPort: 3000
+#       nodePort: 32000   # Access via localhost:32000
+
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: weather-fe
   labels:
     app: weather-fe
 spec:
-  containers:
-    - name: weather-fe
-      image: weather-fe:latest
-      ports:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-fe
+  template:
+    metadata:
+      labels:
+        app: weather-fe
+    spec:
+      containers:
+      - name: weather-fe
+        image: weather-fe:latest
+        imagePullPolicy: Never  # ← This is the key change!
+        ports:
         - containerPort: 3000
-      env:
-        - name: NEXT_PUBLIC_API_BASE_URL
-          value: "http://weather-be:8081"  # BE service URL
-
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: weather-fe-service
+  labels:
+    app: weather-fe
 spec:
-  type: NodePort
   selector:
     app: weather-fe
   ports:
-    - port: 3000        # Container port
-      targetPort: 3000
-      nodePort: 32000   # Access via localhost:32000
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP
