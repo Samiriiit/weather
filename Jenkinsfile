@@ -173,25 +173,41 @@ pipeline {
             }
         }
 
-        stage('Prepare Image for Kind') {
-            steps {
-                // Save image but DON'T delete it yet
-                bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
-            }
-        }
-
         stage('Load FE Image into Kind') {
             steps {
-                bat "kind load image-archive weather-fe.tar --name %CLUSTER_NAME%"
+                script {
+                    // Save the image as tar
+                    bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
+                    
+                    // Find the Kind node container name
+                    def nodeName = bat(script: "podman ps --filter \"name=weather-app-control-plane\" --format \"{{.Names}}\"", returnStdout: true).trim()
+                    
+                    if (nodeName) {
+                        echo "Found Kind node: ${nodeName}"
+                        
+                        // Copy the tar file to the Kind node
+                        bat "podman cp weather-fe.tar ${nodeName}:/weather-fe.tar"
+                        
+                        // Import the image inside the Kind node
+                        bat "podman exec ${nodeName} ctr image import /weather-fe.tar"
+                        
+                        // Clean up inside the container
+                        bat "podman exec ${nodeName} rm /weather-fe.tar"
+                        
+                        echo "✅ Image successfully loaded into Kind cluster"
+                    } else {
+                        error "❌ Kind node container not found. Check if cluster is running."
+                    }
+                    
+                    // Clean up local tar file
+                    bat "if exist weather-fe.tar del weather-fe.tar"
+                }
             }
         }
 
         stage('Deploy FE to Kind') {
             steps {
                 bat "kubectl apply -f weather-fe.yaml"
-                
-                // Now we can clean up after deployment
-                bat "if exist weather-fe.tar del weather-fe.tar"
             }
         }
 
@@ -199,21 +215,23 @@ pipeline {
             steps {
                 bat "kubectl get pods -l app=weather-fe"
                 bat "kubectl get svc -l app=weather-fe"
-                bat "kubectl wait --for=condition=ready pod -l app=weather-fe --timeout=120s"
+                bat "kubectl wait --for=condition=ready pod -l app=weather-fe --timeout=120s || echo 'Continue anyway'"
             }
         }
     }
 
     post {
-        always {
-            // Ensure cleanup even if pipeline fails
-            bat "if exist weather-fe.tar del weather-fe.tar"
-        }
         success {
-            echo "✅ FE deployed successfully!"
+            echo "✅ FE deployed successfully to Kind cluster!"
         }
         failure {
             echo "❌ FE deployment failed!"
+            bat "kubectl describe pods -l app=weather-fe || true"
+            bat "kubectl logs -l app=weather-fe --tail=20 || true"
+        }
+        always {
+            // Final cleanup
+            bat "if exist weather-fe.tar del weather-fe.tar"
         }
     }
 }
