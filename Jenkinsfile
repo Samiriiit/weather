@@ -101,7 +101,7 @@ pipeline {
     environment {
         FE_IMAGE_NAME = "weather-fe"
         IMAGE_TAG = "latest"
-        KUBE_CONTEXT = "kind-weather-app"
+        KUBE_CONTEXT = "weather-app"
     }
 
     stages {
