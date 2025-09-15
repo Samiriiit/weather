@@ -151,102 +151,159 @@
 //     }
 // }
 
+// pipeline {
+//     agent any
+
+//     environment {
+//         FE_IMAGE_NAME = "weather-fe"
+//         IMAGE_TAG = "latest"
+//         CLUSTER_NAME = "weather-app"
+//     }
+
+//     stages {
+//         stage('Checkout FE') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
+
+//         stage('Build FE Image') {
+//             steps {
+//                 bat "podman build -t %FE_IMAGE_NAME%:%IMAGE_TAG% ."
+//             }
+//         }
+
+//         stage('Load FE Image into Kind') {
+//             steps {
+//                 script {
+//                     // Save Podman image as tar archive
+//                     bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
+                    
+//                     // Manual import into Kind node using Podman
+//                     bat "podman cp weather-fe.tar weather-app-control-plane:/weather-fe.tar"
+//                     bat "podman exec weather-app-control-plane ctr image import /weather-fe.tar"
+//                     bat "podman exec weather-app-control-plane rm /weather-fe.tar"
+                    
+//                     // Clean up local tar file
+//                     bat "if exist weather-fe.tar del weather-fe.tar"
+                    
+//                     echo "✅ Image successfully loaded into Kind cluster"
+//                 }
+//             }
+//         }
+
+//         stage('Deploy FE to Kind') {
+//             steps {
+//                 bat "kubectl apply -f weather-fe.yaml"
+//             }
+//         }
+
+//         stage('Verify FE Deployment') {
+//             steps {
+//                 script {
+//                     // Wait for deployment to be ready
+//                     bat "kubectl wait --for=condition=available deployment/weather-fe --timeout=120s || echo 'Continue verification'"
+                    
+//                     // Check resources
+//                     bat "kubectl get deployment weather-fe"
+//                     bat "kubectl get pods -l app=weather-fe"
+//                     bat "kubectl get svc weather-fe-service"
+                    
+//                     // Check pod status and logs
+//                     bat "kubectl describe pods -l app=weather-fe || true"
+//                     bat "kubectl logs -l app=weather-fe --tail=10 || echo 'Logs not available yet'"
+//                 }
+//             }
+//         }
+
+//         // stage('Smoke Test') {
+//         //     steps {
+//         //         script {
+//         //             // Simple internal cluster test without port forwarding
+//         //             bat "kubectl exec deployment/weather-fe -- curl -I http://localhost:3000 || echo 'Internal curl test completed'"
+                    
+//         //             // Alternatively, check if pod is responding internally
+//         //             bat "kubectl run smoke-test --image=curlimages/curl --rm -it --restart=Never -- curl -I http://weather-fe-service:80 || echo 'Service connectivity test completed'"
+//         //         }
+//         //     }
+//         // }
+//     }
+
+//     post {
+//         always {
+//             // Cleanup any temporary files
+//             bat "if exist weather-fe.tar del weather-fe.tar"
+//             echo "Build ${currentBuild.result} - ${currentBuild.fullDisplayName}"
+//         }
+//         success {
+//             echo "✅ FE deployed successfully to Kind cluster!"
+//             echo "Application is running internally in the cluster"
+//             echo "Use 'kubectl port-forward svc/weather-fe-service 3000:80' to access locally"
+//         }
+//         failure {
+//             echo "❌ FE deployment failed!"
+//             // Debugging commands
+//             bat "kubectl describe deployment weather-fe || true"
+//             bat "kubectl describe pods -l app=weather-fe || true"
+//             bat "kubectl logs -l app=weather-fe --tail=20 || true"
+//             bat "kubectl get events --sort-by='.lastTimestamp' || true"
+//         }
+//     }
+// }
+
+
+
 pipeline {
     agent any
-
     environment {
         FE_IMAGE_NAME = "weather-fe"
-        IMAGE_TAG = "latest"
+        FE_IMAGE_TAG = "latest"
         CLUSTER_NAME = "weather-app"
     }
-
     stages {
         stage('Checkout FE') {
             steps {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
         }
-
         stage('Build FE Image') {
             steps {
-                bat "podman build -t %FE_IMAGE_NAME%:%IMAGE_TAG% ."
+                bat "podman build -t %FE_IMAGE_NAME%:%FE_IMAGE_TAG% ."
             }
         }
-
         stage('Load FE Image into Kind') {
             steps {
                 script {
-                    // Save Podman image as tar archive
-                    bat "podman save %FE_IMAGE_NAME%:%IMAGE_TAG% -o weather-fe.tar"
-                    
-                    // Manual import into Kind node using Podman
+                    bat "podman save %FE_IMAGE_NAME%:%FE_IMAGE_TAG% -o weather-fe.tar"
                     bat "podman cp weather-fe.tar weather-app-control-plane:/weather-fe.tar"
-                    bat "podman exec weather-app-control-plane ctr image import /weather-fe.tar"
+                    bat "podman exec weather-app-control-plane ctr image import --base-name docker.io/library/weather-fe /weather-fe.tar"
                     bat "podman exec weather-app-control-plane rm /weather-fe.tar"
-                    
-                    // Clean up local tar file
-                    bat "if exist weather-fe.tar del weather-fe.tar"
-                    
-                    echo "✅ Image successfully loaded into Kind cluster"
+                    bat "del weather-fe.tar"
                 }
             }
         }
-
         stage('Deploy FE to Kind') {
             steps {
                 bat "kubectl apply -f weather-fe.yaml"
             }
         }
-
         stage('Verify FE Deployment') {
             steps {
                 script {
-                    // Wait for deployment to be ready
-                    bat "kubectl wait --for=condition=available deployment/weather-fe --timeout=120s || echo 'Continue verification'"
-                    
-                    // Check resources
-                    bat "kubectl get deployment weather-fe"
-                    bat "kubectl get pods -l app=weather-fe"
-                    bat "kubectl get svc weather-fe-service"
-                    
-                    // Check pod status and logs
-                    bat "kubectl describe pods -l app=weather-fe || true"
-                    bat "kubectl logs -l app=weather-fe --tail=10 || echo 'Logs not available yet'"
+                    sleep(60) // Wait 1 minute
+                    def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
+                    if (status == "Running") {
+                        echo "✅ FE deployed successfully!"
+                    } else {
+                        error "❌ FE deployment failed! Status: $status"
+                    }
                 }
             }
         }
-
-        // stage('Smoke Test') {
-        //     steps {
-        //         script {
-        //             // Simple internal cluster test without port forwarding
-        //             bat "kubectl exec deployment/weather-fe -- curl -I http://localhost:3000 || echo 'Internal curl test completed'"
-                    
-        //             // Alternatively, check if pod is responding internally
-        //             bat "kubectl run smoke-test --image=curlimages/curl --rm -it --restart=Never -- curl -I http://weather-fe-service:80 || echo 'Service connectivity test completed'"
-        //         }
-        //     }
-        // }
     }
-
     post {
         always {
-            // Cleanup any temporary files
-            bat "if exist weather-fe.tar del weather-fe.tar"
-            echo "Build ${currentBuild.result} - ${currentBuild.fullDisplayName}"
-        }
-        success {
-            echo "✅ FE deployed successfully to Kind cluster!"
-            echo "Application is running internally in the cluster"
-            echo "Use 'kubectl port-forward svc/weather-fe-service 3000:80' to access locally"
-        }
-        failure {
-            echo "❌ FE deployment failed!"
-            // Debugging commands
-            bat "kubectl describe deployment weather-fe || true"
-            bat "kubectl describe pods -l app=weather-fe || true"
-            bat "kubectl logs -l app=weather-fe --tail=20 || true"
-            bat "kubectl get events --sort-by='.lastTimestamp' || true"
+            bat "if exist *.tar del *.tar"
         }
     }
 }
