@@ -320,10 +320,12 @@ pipeline {
             steps {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
-        }
+                }
         stage('Build Image in Minikube') {
             steps {
-                bat '@FOR /f "tokens=*" %i IN (\'minikube docker-env --shell cmd\') DO @%i && docker build -t weather-fe:latest .'
+                bat '''
+                    @FOR /f "tokens=*" %%i IN ('minikube docker-env --shell cmd') DO @%%i && docker build -t weather-fe:latest .
+                '''
             }
         }
         stage('Deploy to Kubernetes') {
