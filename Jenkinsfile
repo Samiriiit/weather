@@ -311,51 +311,47 @@
 pipeline {
     agent any
     stages {
-        stage('Start Minikube') {
+        stage('Prepare System') {
             steps {
-                bat 'minikube start --force'
+                bat '''
+                    echo "Starting Docker Desktop..."
+                    timeout /t 30 /nobreak
+                    docker version || echo "Docker may still be starting..."
+                '''
             }
         }
-        stage('Checkout Code') {
+        stage('Start Minikube with Docker') {
+            steps {
+                bat '''
+                    minikube delete 2>nul || echo "No cluster to delete"
+                    minikube start --force --driver=docker
+                '''
+            }
+        }
+        stage('Checkout and Build') {
             steps {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
-            }
-        }
-        stage('Build Image') {
-            steps {
                 bat 'minikube image build -t weather-fe:latest .'
             }
         }
-        stage('Deploy to Kubernetes') {
+        stage('Deploy') {
             steps {
                 bat 'kubectl apply -f weather-fe.yaml'
             }
         }
-        stage('Verify Deployment') {
+        stage('Verify') {
             steps {
                 script {
                     sleep(15)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
                     if (status == "Running") {
-                        echo "✅ DEPLOYMENT SUCCESSFUL!"
-                        bat 'kubectl get svc'
-                        bat 'minikube service weather-fe-service --url'
+                        echo "✅ SUCCESS!"
                     } else {
-                        bat 'kubectl describe pod -l app=weather-fe'
-                        error "❌ Deployment failed: ${status}"
+                        bat 'kubectl logs -l app=weather-fe'
+                        error "❌ Failed: ${status}"
                     }
                 }
             }
-        }
-    }
-    post {
-        always {
-            echo "=== DEPLOYMENT COMPLETE ==="
-            bat 'kubectl get pods -l app=weather-fe'
-        }
-        success {
-            echo "🎉 Weather Frontend deployed successfully to Minikube!"
-            bat 'minikube service list'
         }
     }
 }
