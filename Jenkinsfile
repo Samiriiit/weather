@@ -326,23 +326,35 @@ pipeline {
                 bat 'kubectl apply -f weather-fe.yaml'
             }
         }
-        stage('Verify') {
-            steps {
-                script {
-                    sleep(15)
-                    def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
-                    echo "Pod Status: ${status}"
-                    
-                    if (status == "Running") {
-                        echo "✅ DEPLOYMENT SUCCESSFUL!"
-                        def url = bat(script: "minikube service weather-fe-service --url", returnStdout: true).trim()
-                        echo "🌐 Application URL: ${url}"
-                    } else {
-                        error "❌ Deployment failed: ${status}"
-                    }
+        stage('Verify Deployment') {
+        steps {
+            script {
+                // Wait for pod to become ready
+                sleep(time: 15, unit: 'SECONDS')
+                
+                // Check pod status
+                def status = sh(
+                    script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'",
+                    returnStdout: true
+                ).trim()
+                
+                echo "Pod Status: ${status}"
+                
+                if (status != "Running") {
+                    error "Deployment failed: Pod is in '${status}' state instead of 'Running'"
                 }
+                
+                // Get application URL
+                def url = sh(
+                    script: "minikube service weather-fe-service --url",
+                    returnStdout: true
+                ).trim()
+                
+                echo "✅ DEPLOYMENT SUCCESSFUL!"
+                echo "🌐 Application URL: ${url}"
             }
         }
+}
     }
     post {
         always {
