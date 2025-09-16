@@ -311,9 +311,9 @@
 pipeline {
     agent any
     stages {
-        stage('Start Minikube with Docker') {
+        stage('Start Minikube') {
             steps {
-                bat 'minikube start --force --driver=docker'
+                bat 'minikube start --force'
             }
         }
         stage('Checkout Code') {
@@ -321,7 +321,7 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
         }
-        stage('Build Image using Minikube') {
+        stage('Build Image') {
             steps {
                 bat 'minikube image build -t weather-fe:latest .'
             }
@@ -337,9 +337,12 @@ pipeline {
                     sleep(15)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
                     if (status == "Running") {
-                        echo "✅ SUCCESS: FE is running!"
+                        echo "✅ DEPLOYMENT SUCCESSFUL!"
+                        bat 'kubectl get svc'
+                        bat 'minikube service weather-fe-service --url'
                     } else {
-                        error "❌ FAILED: Pod status - ${status}"
+                        bat 'kubectl describe pod -l app=weather-fe'
+                        error "❌ Deployment failed: ${status}"
                     }
                 }
             }
@@ -347,7 +350,12 @@ pipeline {
     }
     post {
         always {
-            bat 'kubectl get pods'
+            echo "=== DEPLOYMENT COMPLETE ==="
+            bat 'kubectl get pods -l app=weather-fe'
+        }
+        success {
+            echo "🎉 Weather Frontend deployed successfully to Minikube!"
+            bat 'minikube service list'
         }
     }
 }
