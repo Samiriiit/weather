@@ -331,13 +331,13 @@ pipeline {
                 script {
                     sleep(15)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
+                    echo "Pod Status: ${status}"
+                    
                     if (status == "Running") {
                         echo "✅ DEPLOYMENT SUCCESSFUL!"
+                        def url = bat(script: "minikube service weather-fe-service --url", returnStdout: true).trim()
+                        echo "🌐 Application URL: ${url}"
                     } else {
-                        // Get detailed debug info
-                        bat 'kubectl get pods -l app=weather-fe'
-                        bat 'kubectl describe pod -l app=weather-fe'
-                        bat 'kubectl logs -l app=weather-fe'
                         error "❌ Deployment failed: ${status}"
                     }
                 }
@@ -346,13 +346,9 @@ pipeline {
     }
     post {
         always {
-            echo "=== DEPLOYMENT STATUS ==="
+            echo "=== FINAL STATUS ==="
             bat 'kubectl get pods -l app=weather-fe'
             bat 'kubectl get svc -l app=weather-fe'
-        }
-        success {
-            echo "🎉 Weather Frontend deployed successfully!"
-            bat 'minikube service list | findstr weather-fe'
         }
     }
 }
