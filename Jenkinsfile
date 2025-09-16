@@ -253,57 +253,96 @@
 
 
 
+// pipeline {
+//     agent any
+//     environment {
+//         FE_IMAGE_NAME = "weather-fe"
+//         FE_IMAGE_TAG = "latest"
+//         CLUSTER_NAME = "weather-app"
+//     }
+//     stages {
+//         stage('Checkout FE') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
+//         stage('Build FE Image') {
+//             steps {
+//                 bat "podman build -t %FE_IMAGE_NAME%:%FE_IMAGE_TAG% ."
+//             }
+//         }
+//         stage('Load FE Image into Kind') {
+//             steps {
+//                 script {
+//                     bat "podman save %FE_IMAGE_NAME%:%FE_IMAGE_TAG% -o weather-fe.tar"
+//                     bat "podman cp weather-fe.tar weather-app-control-plane:/weather-fe.tar"
+//                     bat "podman exec weather-app-control-plane ctr image import --base-name docker.io/library/weather-fe /weather-fe.tar"
+//                     bat "podman exec weather-app-control-plane rm /weather-fe.tar"
+//                     bat "del weather-fe.tar"
+//                 }
+//             }
+//         }
+//         stage('Deploy FE to Kind') {
+//             steps {
+//                 bat "kubectl apply -f weather-fe.yaml"
+//             }
+//         }
+//         stage('Verify FE Deployment') {
+//             steps {
+//                 script {
+//                     sleep(60) // Wait 1 minute
+//                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
+//                     if (status == "Running") {
+//                         echo "✅ FE deployed successfully!"
+//                     } else {
+//                         error "❌ FE deployment failed! Status: $status"
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     post {
+//         always {
+//             bat "if exist *.tar del *.tar"
+//         }
+//     }
+// }
+
 pipeline {
     agent any
-    environment {
-        FE_IMAGE_NAME = "weather-fe"
-        FE_IMAGE_TAG = "latest"
-        CLUSTER_NAME = "weather-app"
-    }
     stages {
-        stage('Checkout FE') {
+        stage('Start Minikube') {
+            steps {
+                bat 'minikube start --force'
+            }
+        }
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
         }
-        stage('Build FE Image') {
+        stage('Build Image in Minikube') {
             steps {
-                bat "podman build -t %FE_IMAGE_NAME%:%FE_IMAGE_TAG% ."
+                bat '@FOR /f "tokens=*" %i IN (\'minikube docker-env --shell cmd\') DO @%i && docker build -t weather-fe:latest .'
             }
         }
-        stage('Load FE Image into Kind') {
+        stage('Deploy to Kubernetes') {
+            steps {
+                bat 'kubectl apply -f weather-fe.yaml'
+            }
+        }
+        stage('Verify Deployment') {
             steps {
                 script {
-                    bat "podman save %FE_IMAGE_NAME%:%FE_IMAGE_TAG% -o weather-fe.tar"
-                    bat "podman cp weather-fe.tar weather-app-control-plane:/weather-fe.tar"
-                    bat "podman exec weather-app-control-plane ctr image import --base-name docker.io/library/weather-fe /weather-fe.tar"
-                    bat "podman exec weather-app-control-plane rm /weather-fe.tar"
-                    bat "del weather-fe.tar"
-                }
-            }
-        }
-        stage('Deploy FE to Kind') {
-            steps {
-                bat "kubectl apply -f weather-fe.yaml"
-            }
-        }
-        stage('Verify FE Deployment') {
-            steps {
-                script {
-                    sleep(60) // Wait 1 minute
+                    sleep(20)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
                     if (status == "Running") {
-                        echo "✅ FE deployed successfully!"
+                        echo "✅ SUCCESS: FE is running!"
                     } else {
-                        error "❌ FE deployment failed! Status: $status"
+                        error "❌ FAILED: Pod status - ${status}"
                     }
                 }
             }
-        }
-    }
-    post {
-        always {
-            bat "if exist *.tar del *.tar"
         }
     }
 }

@@ -180,8 +180,8 @@ spec:
     spec:
       containers:
       - name: weather-fe
-        image: docker.io/library/weather-fe:latest  # ✅ Correct reference
-        imagePullPolicy: Never
+        image: weather-fe:latest
+        imagePullPolicy: Never  # ← THIS IS KEY FOR MINIKUBE
         ports:
         - containerPort: 3000
 ---
