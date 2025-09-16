@@ -311,16 +311,18 @@
 pipeline {
     agent any
     stages {
-        stage('Prepare System') {
+        stage('Start Docker Desktop') {
             steps {
                 bat '''
                     echo "Starting Docker Desktop..."
-                    timeout /t 30 /nobreak
-                    docker version || echo "Docker may still be starting..."
+                    "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe" &
+                    timeout 30
+                    docker version || echo "Waiting for Docker to start..."
+                    timeout 10
                 '''
             }
         }
-        stage('Start Minikube with Docker') {
+        stage('Start Minikube') {
             steps {
                 bat '''
                     minikube delete 2>nul || echo "No cluster to delete"
@@ -342,7 +344,7 @@ pipeline {
         stage('Verify') {
             steps {
                 script {
-                    sleep(15)
+                    sleep(20)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
                     if (status == "Running") {
                         echo "✅ SUCCESS!"
