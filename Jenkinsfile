@@ -311,28 +311,13 @@
 pipeline {
     agent any
     stages {
-        stage('Start Docker Desktop') {
-            steps {
-                bat '''
-                    echo "Starting Docker Desktop..."
-                    "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe" &
-                    timeout 30
-                    docker version || echo "Waiting for Docker to start..."
-                    timeout 10
-                '''
-            }
-        }
-        stage('Start Minikube') {
-            steps {
-                bat '''
-                    minikube delete 2>nul || echo "No cluster to delete"
-                    minikube start --force --driver=docker
-                '''
-            }
-        }
-        stage('Checkout and Build') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+            }
+        }
+        stage('Build Image') {
+            steps {
                 bat 'minikube image build -t weather-fe:latest .'
             }
         }
@@ -344,16 +329,30 @@ pipeline {
         stage('Verify') {
             steps {
                 script {
-                    sleep(20)
+                    sleep(15)
                     def status = bat(script: "kubectl get pods -l app=weather-fe -o jsonpath='{.items[0].status.phase}'", returnStdout: true).trim()
                     if (status == "Running") {
-                        echo "✅ SUCCESS!"
+                        echo "✅ DEPLOYMENT SUCCESSFUL!"
                     } else {
+                        // Get detailed debug info
+                        bat 'kubectl get pods -l app=weather-fe'
+                        bat 'kubectl describe pod -l app=weather-fe'
                         bat 'kubectl logs -l app=weather-fe'
-                        error "❌ Failed: ${status}"
+                        error "❌ Deployment failed: ${status}"
                     }
                 }
             }
+        }
+    }
+    post {
+        always {
+            echo "=== DEPLOYMENT STATUS ==="
+            bat 'kubectl get pods -l app=weather-fe'
+            bat 'kubectl get svc -l app=weather-fe'
+        }
+        success {
+            echo "🎉 Weather Frontend deployed successfully!"
+            bat 'minikube service list | findstr weather-fe'
         }
     }
 }
