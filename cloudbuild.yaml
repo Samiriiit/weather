@@ -1,0 +1,22 @@
+steps:
+# Step 1 — Build Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/burner-samkumar4/weather-fe-repo/weather-fe:latest', '.']
+
+# Step 2 — Push image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/burner-samkumar4/weather-fe-repo/weather-fe:latest']
+
+# Step 3 — Configure kubectl for GKE
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud container clusters get-credentials weather-cluster \
+      --zone us-central1-a \
+      --project burner-samkumar4
+
+# Step 4 — Apply Kubernetes manifest
+- name: 'gcr.io/cloud-builders/kubectl'
+  args: ['apply', '-f', 'weather-fe.yaml']

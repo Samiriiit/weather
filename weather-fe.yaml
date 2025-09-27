@@ -164,12 +164,48 @@
 #     targetPort: 3000
 #     nodePort: 31000  # Choose a port between 30000-32767
 
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: weather-fe
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: weather-fe
+#   template:
+#     metadata:
+#       labels:
+#         app: weather-fe
+#     spec:
+#       containers:
+#       - name: weather-fe
+#         image: weather-fe:latest
+#         imagePullPolicy: Never  # ← THIS IS KEY FOR MINIKUBE
+#         ports:
+#         - containerPort: 3000
+#         env:
+#         - name: NEXT_PUBLIC_API_BASE_URL
+#           value: "http://weather-be-service:8081"
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: weather-fe-service
+# spec:
+#   selector:
+#     app: weather-fe
+#   ports:
+#   - port: 80
+#     targetPort: 3000
+#   type: ClusterIP
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: weather-fe
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: weather-fe
@@ -180,10 +216,13 @@ spec:
     spec:
       containers:
       - name: weather-fe
-        image: weather-fe:latest
-        imagePullPolicy: Never  # ← THIS IS KEY FOR MINIKUBE
+        image: us-central1-docker.pkg.dev/burner-samkumar4/weather-fe-repo/weather-fe:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://weather-be-service:8081"
 ---
 apiVersion: v1
 kind: Service
@@ -195,4 +234,4 @@ spec:
   ports:
   - port: 80
     targetPort: 3000
-  type: ClusterIP
+  type: LoadBalancer
