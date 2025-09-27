@@ -366,141 +366,53 @@
 
 pipeline {
     agent any
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+    }
     environment {
         PROJECT_ID = 'burner-samkumar4'
         REGION = 'us-central1'
-        CLUSTER_NAME = 'weather-cluster'
-        CLUSTER_ZONE = 'us-central1-a'
-        BUILD_TIMEOUT = '30'
-        GCS_STAGING_DIR = 'gs://weather-fe-staging/source'
-        GCS_LOG_DIR = 'gs://weather-fe-staging/logs'
-    }
-    options {
-        timeout(time: ${BUILD_TIMEOUT}, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        disableConcurrentBuilds()
     }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', 
-                    url: 'https://github.com/Samiriiit/weather.git',
-                    poll: true
+                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
             }
         }
         
-        stage('Validate GCS Buckets') {
+        stage('Setup GCP') {
             steps {
-                script {
-                    bat """
-                        gsutil ls gs://weather-fe-staging/ || gsutil mb -l us-central1 gs://weather-fe-staging/
-                        gsutil iam ch serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com:roles/storage.admin gs://weather-fe-staging/
-                    """
-                }
+                bat "gcloud config set project ${PROJECT_ID}"
             }
         }
         
-        stage('Trigger Cloud Build with GCS Staging') {
+        stage('Trigger Cloud Build') {
             steps {
-                script {
-                    def buildId = bat(
-                        script: """
-                            gcloud builds submit . \
-                            --config cloudbuild.yaml \
-                            --region=${REGION} \
-                            --gcs-source-staging-dir=${GCS_STAGING_DIR} \
-                            --gcs-log-dir=${GCS_LOG_DIR} \
-                            --project=${PROJECT_ID} \
-                            --format="value(id)"
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    
-                    currentBuild.description = "Cloud Build ID: ${buildId}"
-                    echo "Triggered Cloud Build with ID: ${buildId}"
-                    
-                    // Wait for completion
-                    waitForCloudBuildCompletion(buildId)
-                }
+                bat """
+                    gcloud builds submit . \
+                    --config cloudbuild.yaml \
+                    --region=${REGION} \
+                    --gcs-source-staging-dir=gs://weather-fe-staging/source \
+                    --gcs-log-dir=gs://weather-fe-staging/logs
+                """
             }
         }
         
         stage('Verify Deployment') {
             steps {
-                script {
-                    bat """
-                        gcloud container clusters get-credentials ${CLUSTER_NAME} \
-                        --zone ${CLUSTER_ZONE} \
-                        --project ${PROJECT_ID}
-                        
-                        kubectl rollout status deployment/weather-fe --timeout=300s
-                        kubectl get pods -l app=weather-fe -o wide
-                    """
-                }
+                bat """
+                    gcloud container clusters get-credentials weather-cluster \
+                    --zone us-central1-a
+                    
+                    kubectl get pods -l app=weather-fe
+                    kubectl get service weather-fe-service
+                """
             }
         }
     }
     post {
-        success {
-            echo "✅ Deployment completed successfully"
-            script {
-                bat """
-                    gcloud builds list --filter="id=${buildId}" --format="table(id,status,createTime,duration)" --limit=1
-                """
-            }
-        }
-        failure {
-            echo "❌ Deployment failed"
-            script {
-                bat """
-                    gcloud builds log ${buildId} --region=${REGION} || echo "Logs available at: ${GCS_LOG_DIR}"
-                """
-            }
-        }
         always {
-            cleanWs()
-            // Archive important files
-            archiveArtifacts artifacts: 'cloudbuild.yaml,weather-fe.yaml', fingerprint: true
+            echo "Build completed: ${currentBuild.result}"
         }
     }
-}
-
-// Custom function to wait for Cloud Build completion
-def waitForCloudBuildCompletion(buildId) {
-    def timeoutMinutes = 30
-    def endTime = System.currentTimeMillis() + (timeoutMinutes * 60 * 1000)
-    
-    while (System.currentTimeMillis() < endTime) {
-        def status = bat(
-            script: """
-                gcloud builds describe ${buildId} \
-                --region=${REGION} \
-                --project=${PROJECT_ID} \
-                --format="value(status)"
-            """,
-            returnStdout: true
-        ).trim()
-        
-        echo "Cloud Build status: ${status}"
-        
-        switch(status) {
-            case 'SUCCESS':
-                echo "✅ Cloud Build completed successfully"
-                return true
-            case 'FAILURE':
-                error "❌ Cloud Build failed"
-                return false
-            case 'CANCELLED':
-                error "❌ Cloud Build was cancelled"
-                return false
-            case 'QUEUED':
-            case 'WORKING':
-                sleep time: 30, unit: 'SECONDS'
-                break
-            default:
-                echo "Unknown status: ${status}, waiting..."
-                sleep time: 30, unit: 'SECONDS'
-        }
-    }
-    error "❌ Cloud Build timed out after ${timeoutMinutes} minutes"
 }
