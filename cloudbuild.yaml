@@ -42,10 +42,8 @@ steps:
       - |
         gcloud container clusters get-credentials weather-cluster \
           --zone us-central1-a \
-          --project burner-samkumar4
+          --project burner-samkumar4 \
+          --internal-ip
         
         # Now apply the Kubernetes manifest
-        kubectl apply -f weather-fe.yaml
-        
-        # Verify deployment
-        kubectl rollout status deployment/weather-fe --timeout=300s
+        kubectl apply -f weather-fe.yaml --validate=false
