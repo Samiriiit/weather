@@ -387,16 +387,17 @@ pipeline {
         }
         
         stage('Trigger Cloud Build') {
-            steps {
-                bat """
-                    gcloud builds submit . \
-                    --config cloudbuild.yaml \
-                    --region=${REGION} \
-                    --gcs-source-staging-dir=gs://weather-fe-staging/source \
-                    --gcs-log-dir=gs://weather-fe-staging/logs
-                """
-            }
-        }
+    steps {
+        bat """
+            gcloud builds submit . ^
+                --config cloudbuild.yaml ^
+                --region=${REGION} ^
+                --gcs-source-staging-dir=gs://weather-fe-staging/source ^
+                --gcs-log-dir=gs://weather-fe-staging/logs ^
+                --worker-pool=projects/${PROJECT_ID}/locations/${REGION}/workerPools/weather-gke-pool
+        """
+    }
+}
         
         stage('Verify Deployment') {
             steps {
