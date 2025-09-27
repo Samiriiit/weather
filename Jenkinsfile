@@ -343,23 +343,143 @@
 //     }
 // }
 
+// pipeline {
+//     agent any
+//     stages {
+//         stage('Checkout Code') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
+//         stage('Trigger Cloud Build') {
+//             steps {
+//                 bat 'gcloud builds submit --config cloudbuild.yaml --region=us-central1 .'
+//             }
+//         }
+//     }
+//     post {
+//         always {
+//             echo "✅ Deployment process completed"
+//         }
+//     }
+// }
+
 pipeline {
     agent any
+    environment {
+        PROJECT_ID = 'burner-samkumar4'
+        REGION = 'us-central1'
+        CLUSTER_NAME = 'weather-cluster'
+        CLUSTER_ZONE = 'us-central1-a'
+    }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+                git branch: 'main', 
+                    url: 'https://github.com/Samiriiit/weather.git',
+                    credentialsId: 'your-github-credentials' // If private repo
             }
         }
+        
+        stage('Validate Configuration') {
+            steps {
+                script {
+                    // Check if required files exist
+                    def files = findFiles(glob: 'cloudbuild.yaml')
+                    if (files.length == 0) {
+                        error "cloudbuild.yaml not found in repository"
+                    }
+                    
+                    // Validate cloudbuild.yaml syntax (basic check)
+                    def cloudbuildContent = readFile('cloudbuild.yaml')
+                    if (!cloudbuildContent.contains('steps:')) {
+                        error "Invalid cloudbuild.yaml structure"
+                    }
+                }
+            }
+        }
+        
+        stage('Authenticate GCP') {
+            steps {
+                script {
+                    // Ensure gcloud is authenticated
+                    withCredentials([file(credentialsId: 'gcp-service-account-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                        bat 'gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%'
+                        bat 'gcloud config set project ${PROJECT_ID}'
+                    }
+                }
+            }
+        }
+        
         stage('Trigger Cloud Build') {
             steps {
-                bat 'gcloud builds submit --config cloudbuild.yaml --region=us-central1 .'
+                script {
+                    try {
+                        bat """
+                            gcloud builds submit \
+                            --config cloudbuild.yaml \
+                            --region=${REGION} \
+                            --project=${PROJECT_ID} \
+                            --async \
+                            .
+                        """
+                    } catch (Exception e) {
+                        echo "Cloud Build trigger failed: ${e.message}"
+                        // Optionally add retry logic
+                        retry(3) {
+                            bat """
+                                gcloud builds submit \
+                                --config cloudbuild.yaml \
+                                --region=${REGION} \
+                                --project=${PROJECT_ID} \
+                                .
+                            """
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    sleep time: 30, unit: 'SECONDS' // Wait for deployment to complete
+                    bat """
+                        gcloud container clusters get-credentials ${CLUSTER_NAME} \
+                        --zone ${CLUSTER_ZONE} \
+                        --project ${PROJECT_ID}
+                        
+                        kubectl get deployment weather-fe -o wide
+                        kubectl get pods -l app=weather-fe
+                        kubectl get service weather-fe-service
+                    """
+                }
             }
         }
     }
     post {
+        success {
+            echo "✅ Deployment completed successfully"
+            // Optional: Send success notification
+            emailext (
+                subject: "SUCCESS: Weather App Deployment",
+                body: "Deployment completed successfully.\nBuild URL: ${BUILD_URL}",
+                to: "your-email@example.com"
+            )
+        }
+        failure {
+            echo "❌ Deployment failed"
+            // Optional: Send failure notification
+            emailext (
+                subject: "FAILED: Weather App Deployment",
+                body: "Deployment failed. Please check Jenkins build: ${BUILD_URL}",
+                to: "your-email@example.com"
+            )
+        }
         always {
-            echo "✅ Deployment process completed"
+            // Cleanup or post-build actions
+            echo "Build completed with status: ${currentBuild.result}"
+            cleanWs() // Clean workspace
         }
     }
 }
