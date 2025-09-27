@@ -353,7 +353,7 @@ pipeline {
         }
         stage('Trigger Cloud Build') {
             steps {
-                bat "gcloud builds submit --config cloudbuild.yaml ."
+                bat 'gcloud builds submit --config cloudbuild.yaml --region=us-central1 .'
             }
         }
     }
