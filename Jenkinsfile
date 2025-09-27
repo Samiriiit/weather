@@ -401,8 +401,9 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 bat """
-                    gcloud container clusters get-credentials weather-cluster \
-                    --zone us-central1-a
+                   gcloud container clusters get-credentials weather-cluster \
+                    --zone us-central1-a \
+                    --internal-ip 
                     
                     kubectl get pods -l app=weather-fe
                     kubectl get service weather-fe-service
