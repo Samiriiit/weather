@@ -67,10 +67,10 @@ steps:
       - 'deployment/weather-fe'
       - '--timeout=300s'
 
-# Add substitutions for dynamic values
-substitutions:
-  _COMMIT_SHA: $COMMIT_SHA
-  _PROJECT_ID: burner-samkumar4
+# # Add substitutions for dynamic values
+# substitutions:
+#   _COMMIT_SHA: $COMMIT_SHA
+#   _PROJECT_ID: burner-samkumar4
 
 # Optimize build options
 options:
