@@ -1,6 +1,6 @@
 import { Forecast, WeatherApiResponse } from '../types/weather';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+const API_BASE_URL =  'http://localhost:50001';
 const WEATHER_ENDPOINT = `${API_BASE_URL}/weather-prediction`;
 
 async function apiCaller<T>(url: string, retries = 2): Promise<T> {
