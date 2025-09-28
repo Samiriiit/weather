@@ -104,7 +104,7 @@ spec:
     spec:
       containers:
       - name: weather-fe
-        image: localhost/weather-fe:latest
+        image: weather-fe:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 3000  # Your app's internal port
