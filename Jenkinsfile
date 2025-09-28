@@ -308,40 +308,40 @@
 //     }
 // }
 
-// pipeline {
-//     agent any
-//     stages {
-//         stage('Checkout Code') {
-//             steps {
-//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
-//             }
-//         }
-//         stage('Build Image') {
-//             steps {
-//                 bat 'minikube image build -t weather-fe:latest .'
-//             }
-//         }
-//         stage('Deploy') {
-//             steps {
-//                 bat 'kubectl apply -f weather-fe.yaml'
-//             }
-//         }
-//      stage('Verify') {
-//     steps {
-//         sleep(15)
-//         bat "kubectl get pods -l app=weather-fe | findstr Running"
-//         echo "✅ Pod is Running"
-//     }
-// }
-//     }
-//     post {
-//         always {
-//             echo "=== FINAL STATUS ==="
-//             bat 'kubectl get pods -l app=weather-fe'
-//             bat 'kubectl get svc -l app=weather-fe'
-//         }
-//     }
-// }
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+            }
+        }
+        stage('Build Image') {
+            steps {
+                bat 'minikube image build -t weather-fe:latest .'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                bat 'kubectl apply -f weather-fe.yaml'
+            }
+        }
+     stage('Verify') {
+    steps {
+        sleep(15)
+        bat "kubectl get pods -l app=weather-fe | findstr Running"
+        echo "✅ Pod is Running"
+    }
+}
+    }
+    post {
+        always {
+            echo "=== FINAL STATUS ==="
+            bat 'kubectl get pods -l app=weather-fe'
+            bat 'kubectl get svc -l app=weather-fe'
+        }
+    }
+}
 
 // pipeline {
 //     agent any
@@ -364,57 +364,57 @@
 //     }
 // }
 
-pipeline {
-    agent any
-    options {
-        timeout(time: 30, unit: 'MINUTES')
-    }
-    environment {
-        PROJECT_ID = 'burner-samkumar4'
-        REGION = 'us-central1'
-    }
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
-            }
-        }
+// pipeline {
+//     agent any
+//     options {
+//         timeout(time: 30, unit: 'MINUTES')
+//     }
+//     environment {
+//         PROJECT_ID = 'burner-samkumar4'
+//         REGION = 'us-central1'
+//     }
+//     stages {
+//         stage('Checkout Code') {
+//             steps {
+//                 git branch: 'main', url: 'https://github.com/Samiriiit/weather.git'
+//             }
+//         }
         
-        stage('Setup GCP') {
-            steps {
-                bat "gcloud config set project ${PROJECT_ID}"
-            }
-        }
+//         stage('Setup GCP') {
+//             steps {
+//                 bat "gcloud config set project ${PROJECT_ID}"
+//             }
+//         }
         
-        stage('Trigger Cloud Build') {
-    steps {
-        bat """
-            gcloud builds submit . ^
-                --config cloudbuild.yaml ^
-                --region=${REGION} ^
-                --gcs-source-staging-dir=gs://weather-fe-staging/source ^
-                --gcs-log-dir=gs://weather-fe-staging/logs ^
-                --worker-pool=projects/${PROJECT_ID}/locations/${REGION}/workerPools/weather-gke-pool
-        """
-    }
-}
+//         stage('Trigger Cloud Build') {
+//     steps {
+//         bat """
+//             gcloud builds submit . ^
+//                 --config cloudbuild.yaml ^
+//                 --region=${REGION} ^
+//                 --gcs-source-staging-dir=gs://weather-fe-staging/source ^
+//                 --gcs-log-dir=gs://weather-fe-staging/logs ^
+//                 --worker-pool=projects/${PROJECT_ID}/locations/${REGION}/workerPools/weather-gke-pool
+//         """
+//     }
+// }
         
-        stage('Verify Deployment') {
-            steps {
-                bat """
-                   gcloud container clusters get-credentials weather-cluster \
-                    --zone us-central1-a \
-                    --internal-ip 
+//         stage('Verify Deployment') {
+//             steps {
+//                 bat """
+//                    gcloud container clusters get-credentials weather-cluster \
+//                     --zone us-central1-a \
+//                     --internal-ip 
                     
-                    kubectl get pods -l app=weather-fe
-                    kubectl get service weather-fe-service
-                """
-            }
-        }
-    }
-    post {
-        always {
-            echo "Build completed: ${currentBuild.result}"
-        }
-    }
-}
+//                     kubectl get pods -l app=weather-fe
+//                     kubectl get service weather-fe-service
+//                 """
+//             }
+//         }
+//     }
+//     post {
+//         always {
+//             echo "Build completed: ${currentBuild.result}"
+//         }
+//     }
+// }
