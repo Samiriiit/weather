@@ -1,5 +1,7 @@
 const CACHE_NAME = "weather-app-v1";
 const urlsToCache = ["/", "/offline.html", "/favicon.ico"];
+// CACHE_NAME → Name of the cache store for your app’s static assets.
+// urlsToCache → List of static files to cache for offline use (homepage, offline page, favicon).
 
 // Install static assets
 self.addEventListener("install", (event) => {
