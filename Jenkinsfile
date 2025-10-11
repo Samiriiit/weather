@@ -38,11 +38,6 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'weather-fe:latest'
-        K8S_APP_LABEL = 'weather-fe'
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -50,10 +45,22 @@ pipeline {
             }
         }
 
+        stage('Cleanup Old Pods & Images') {
+            steps {
+                echo "🧹 Cleaning up old FE pods and Podman images"
+                bat """
+                kubectl delete pod -l app=weather-fe --ignore-not-found
+                podman container prune -f
+                podman image prune -af
+                """
+            }
+        }
+
         stage('Build Image') {
             steps {
-                bat 'podman build -t %IMAGE_NAME% .'
-                bat 'kind load podman-image %IMAGE_NAME% --name weather-app'
+                // Build FE image locally
+                bat 'podman build -t weather-fe:latest .'
+                // imagePullPolicy: Never ensures Kubernetes uses this local image
             }
         }
 
@@ -65,26 +72,18 @@ pipeline {
 
         stage('Verify') {
             steps {
-                script {
-                    timeout(time: 2, unit: 'MINUTES') {
-                        waitUntil {
-                            def status = bat(
-                                script: "kubectl get pods -l app=%K8S_APP_LABEL% -o jsonpath=\"{.items[0].status.phase}\"",
-                                returnStdout: true
-                            ).trim()
-                            return status == "Running"
-                        }
-                    }
-                    echo "✅ Pod is Running"
-                }
+                sleep(15)
+                bat 'kubectl get pods -l app=weather-fe | findstr Running'
+                echo "✅ Pod is Running"
             }
         }
     }
 
     post {
         always {
-            bat 'kubectl get pods -l app=%K8S_APP_LABEL%'
-            bat 'kubectl get svc -l app=%K8S_APP_LABEL%'
+            echo "=== FINAL STATUS ==="
+            bat 'kubectl get pods -l app=weather-fe'
+            bat 'kubectl get svc -l app=weather-fe'
         }
     }
 }
