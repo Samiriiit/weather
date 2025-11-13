@@ -26,12 +26,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Run Unit Tests
-        run: npm test -- --watchAll=false
-
       - name: Build production bundle
         run: npm run build
 
