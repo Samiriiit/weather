@@ -1,18 +1,103 @@
 
 
-apiVersion: apps/v1 
+# apiVersion: apps/v1 
+# kind: Deployment
+# # Deployment is a controller which manage pod automatically
+# # Replica Management: exactly one pod of the frontend is always
+# # Pod Template: how the pod should look environment cpu memory
+# # Probes for Health Checks: livenessProbe → Checks if the app is alive (otherwise restarts it). readinessProbe → Checks if the app is ready to serve traffic
+# # Resource Requests & Limits:Ensures fair CPU/memory usage
+# metadata:
+#   name: weather-fe
+#   labels:
+#     app: weather-fe
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: weather-fe
+#   template:
+#     metadata:
+#       labels:
+#         app: weather-fe
+#     spec:
+#       containers:
+#       - name: weather-fe
+#         image: weather-fe:latest
+#         imagePullPolicy: Never
+#         # image: 192.168.1.100:5000/weather-fe:latest
+#         # imagePullPolicy: Always
+#         # imagePullPolicy: IfNotPresent
+#         ports:
+#         - containerPort: 3000  # Your app's internal port
+#         env:
+#         - name: NODE_ENV
+#           value: "production"
+#         resources:
+#           requests:
+#             memory: "256Mi"
+#             cpu: "250m"
+#           limits:
+#             memory: "512Mi"
+#             cpu: "500m"
+#         livenessProbe:
+#           httpGet:
+#             path: /
+#             port: 3000  # Match containerPort
+#           initialDelaySeconds: 30
+#           periodSeconds: 10
+#         readinessProbe:
+#           httpGet:
+#             path: /
+#             port: 3000  # Match containerPort
+#           initialDelaySeconds: 5
+#           periodSeconds: 5
+# ---
+# # Exposes the frontend internally within the Kubernetes cluster for backend or internal pod communication.
+# # Uses a stable virtual IP to route traffic to available frontend pods.
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: weather-fe-service
+#   labels:
+#     app: weather-fe
+# spec:
+#   selector:
+#     app: weather-fe
+#   ports:
+#   - name: http
+#     port: 3000        # Changed from 80 to avoid conflicts
+#     targetPort: 3000  # Must match containerPort
+#     protocol: TCP
+#   type: ClusterIP 
+
+# ---
+# # Exposes the frontend externally via a port (here 31000) on each node of the cluster.
+
+# # Allows users to access the app in the browser
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: weather-fe-nodeport
+#   labels:
+#     app: weather-fe
+# spec:
+#   type: NodePort
+#   selector:
+#     app: weather-fe
+#   ports:
+#   - name: http
+#     port: 3000
+#     targetPort: 3000
+#     nodePort: 31000  # Choose a port between 30000-32767 // uncomment
+apiVersion: apps/v1
 kind: Deployment
-# Deployment is a controller which manage pod automatically
-# Replica Management: exactly one pod of the frontend is always
-# Pod Template: how the pod should look environment cpu memory
-# Probes for Health Checks: livenessProbe → Checks if the app is alive (otherwise restarts it). readinessProbe → Checks if the app is ready to serve traffic
-# Resource Requests & Limits:Ensures fair CPU/memory usage
 metadata:
   name: weather-fe
   labels:
     app: weather-fe
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: weather-fe
@@ -22,72 +107,24 @@ spec:
         app: weather-fe
     spec:
       containers:
-      - name: weather-fe
-        image: weather-fe:latest
-        imagePullPolicy: Never
-        # image: 192.168.1.100:5000/weather-fe:latest
-        # imagePullPolicy: Always
-        # imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 3000  # Your app's internal port
-        env:
-        - name: NODE_ENV
-          value: "production"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 3000  # Match containerPort
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 3000  # Match containerPort
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: weather-fe
+          image: 490196132533.dkr.ecr.us-east-1.amazonaws.com/weather-fe:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_ENV
+              value: "prod"
 ---
-# Exposes the frontend internally within the Kubernetes cluster for backend or internal pod communication.
-# Uses a stable virtual IP to route traffic to available frontend pods.
 apiVersion: v1
 kind: Service
 metadata:
   name: weather-fe-service
-  labels:
-    app: weather-fe
 spec:
   selector:
     app: weather-fe
   ports:
-  - name: http
-    port: 3000        # Changed from 80 to avoid conflicts
-    targetPort: 3000  # Must match containerPort
-    protocol: TCP
-  type: ClusterIP 
+    - port: 80
+      targetPort: 3000
+  type: LoadBalancer
 
----
-# Exposes the frontend externally via a port (here 31000) on each node of the cluster.
-
-# Allows users to access the app in the browser
-apiVersion: v1
-kind: Service
-metadata:
-  name: weather-fe-nodeport
-  labels:
-    app: weather-fe
-spec:
-  type: NodePort
-  selector:
-    app: weather-fe
-  ports:
-  - name: http
-    port: 3000
-    targetPort: 3000
-    nodePort: 31000  # Choose a port between 30000-32767 // uncomment
 
