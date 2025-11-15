@@ -92,7 +92,7 @@ pipeline {
         //         sh 'docker build --build-arg REACT_APP_ENV=prod -t $ECR_REPO:$IMAGE_TAG .'
         //     }
         // }
-       .stage('Docker Build & Push') {
+       stage('Docker Build & Push') {
       steps {
         sh """
           aws ecr get-login-password --region $AWS_REGION \
