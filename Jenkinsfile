@@ -50,7 +50,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        ECR_REPO = '490196132533.dkr.ecr.us-east-1.amazonaws.com/weather-fe'
+        ECR = '490196132533.dkr.ecr.us-east-1.amazonaws.com/weather-fe'
         // IMAGE_TAG = "build-${env.BUILD_ID}"
         TAG = 'latest'
         CONTAINER_NAME = "weather-fe"
