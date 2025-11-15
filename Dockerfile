@@ -2,6 +2,7 @@
 # FROM node:18-slim AS builder
 # WORKDIR /app
 
+
 # # copy  - package.json aur package-lock.json
 # COPY package*.json ./
 # RUN npm install
@@ -32,6 +33,9 @@
 
 FROM node:18-slim AS builder
 WORKDIR /app
+#  allows passing env during docker build
+ARG REACT_APP_ENV=dev
+ENV REACT_APP_ENV=$REACT_APP_ENV
 
 # copy package.json & package-lock.json
 COPY package*.json ./
@@ -49,6 +53,9 @@ RUN ./node_modules/.bin/next build
 
 FROM node:18-slim
 WORKDIR /app
+# allows passing env during docker build
+ARG REACT_APP_ENV=dev
+ENV REACT_APP_ENV=$REACT_APP_ENV
 
 # minimal fix: copy package*.json
 COPY --from=builder /app/package*.json ./
