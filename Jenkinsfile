@@ -51,7 +51,8 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         ECR_REPO = '490196132533.dkr.ecr.us-east-1.amazonaws.com/weather-fe'
-        IMAGE_TAG = "build-${env.BUILD_ID}"
+        // IMAGE_TAG = "build-${env.BUILD_ID}"
+        TAG = 'latest'
         CONTAINER_NAME = "weather-fe"
         CLUSTER_NAME = "weather-cluster"
         SERVICE_NAME = "weather-fe-service"
@@ -80,17 +81,29 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                // sh '''
-                // aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                // docker build -t $ECR_REPO:$IMAGE_TAG .
-                // docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
-                // '''
-                //  sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
-                sh 'docker build --build-arg REACT_APP_ENV=prod -t $ECR_REPO:$IMAGE_TAG .'
-            }
-        }
+        // stage('Build Docker Image') {
+        //     steps {
+        //         // sh '''
+        //         // aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+        //         // docker build -t $ECR_REPO:$IMAGE_TAG .
+        //         // docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
+        //         // '''
+        //         //  sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+        //         sh 'docker build --build-arg REACT_APP_ENV=prod -t $ECR_REPO:$IMAGE_TAG .'
+        //     }
+        // }
+       .stage('Docker Build & Push') {
+      steps {
+        sh """
+          aws ecr get-login-password --region $AWS_REGION \
+          | docker login --username AWS --password-stdin $ECR
+
+          docker build -t $ECR:$TAG .
+          docker push $ECR:$TAG
+        """
+      }
+    }
+        
          stage('k8s deployment') {
             steps {
                 sh 'kubectl apply -f weather-fe.yaml'
