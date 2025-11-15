@@ -150,7 +150,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ FE Deployment successful - ${IMAGE_TAG}"
+            echo "✅ FE Deployment successful"
         }
         failure {
             echo "❌ Deployment failed!"
